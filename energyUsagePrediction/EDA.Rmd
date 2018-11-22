@@ -1,0 +1,256 @@
+---
+title: "Energy Prediction"
+output: html_document
+---
+
+## Introduction
+
+This study looked into assessing the heating load and cooling load requirements of buildings (that is, energy efficiency) as a function of building parameters.
+
+- Source:
+
+The dataset was created by Angeliki Xifara (angxifara '@' gmail.com, Civil/Structural Engineer) and was processed by Athanasios Tsanas (tsanasthanasis '@' gmail.com, Oxford Centre for Industrial and Applied Mathematics, University of Oxford, UK).
+
+- Data Set Information:
+
+We perform energy analysis using 12 different building shapes simulated in Ecotect. The buildings differ with respect to the glazing area, the glazing area distribution, and the orientation, amongst other parameters. We simulate various settings as functions of the afore-mentioned characteristics to obtain 768 building shapes. The dataset comprises 768 samples and 8 features, aiming to predict two real valued responses. It can also be used as a multi-class classification problem if the response is rounded to the nearest integer.
+
+- Attribute Information:
+
+The dataset contains eight attributes (or features, denoted by X1...X8) and two responses (or outcomes, denoted by y1 and y2). The aim is to use the eight features to predict each of the two responses. 
+
+- Specifically: 
+1. X1	Relative Compactness 
+1. X2	Surface Area 
+1. X3	Wall Area 
+1. X4	Roof Area 
+1. X5	Overall Height 
+1. X6	Orientation 
+1. X7	Glazing Area 
+1. X8	Glazing Area Distribution 
+1. y1	Heating Load 
+1. y2	Cooling Load
+
+- Relevant Papers:
+
+A. Tsanas, A. Xifara: 'Accurate quantitative estimation of energy performance of residential buildings using statistical machine learning tools', Energy and Buildings, Vol. 49, pp. 560-567, 2012
+
+
+
+- Citation Request:
+
+A. Tsanas, A. Xifara: 'Accurate quantitative estimation of energy performance of residential buildings using statistical machine learning tools', Energy and Buildings, Vol. 49, pp. 560-567, 2012 (the paper can be accessed from [Web Link]) 
+
+For further details on the data analysis methodology: 
+A. Tsanas, 'Accurate telemonitoring of Parkinsonâ€™s disease symptom severity using nonlinear speech signal processing and statistical machine learning', D.Phil. thesis, University of Oxford, 2012 (which can be accessed from [Web Link])
+
+
+## Load Data
+
+```{r library}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(psych)
+library(reshape2)
+library(clusterSim) #normalization
+library(cowplot)
+
+```
+
+load the dataset and view the first five rows 
+
+```{r load-dataset}
+df <- read_excel('./ENB2012_data.xlsx')
+head(df)
+```
+
+Get the summary statistics of the dataframe
+
+```{r summary-df}
+
+summary(df)
+
+```
+
+From the summary statistics, we can see that there is no missing values.
+All the columns are numerics
+
+Change the columns name to its meaningful names
+
+```{r rename-columns}
+#create a vector of the columns
+df_column <- c('Relative_Compactness','Surface_Area', 'Wall_Area','Roof_Area','Overall_Height','Orientation','Glazing_Area','Glazing_Area_Distribution','Heating_Load','Cooling_Load')
+
+colnames(df) <- df_column
+
+summary(df)
+
+```
+
+Pair plot for the correlation of the dataframe
+
+```{r pair-plots}
+pairs.panels(df[,-c(9,10)])
+
+```
+
+- The roof_Area and Overall_height are higly corelated with corelation of -0.97
+- The ralatic compactiness and surface area are higly corelated with corelation of -0.99
+
+
+Let take a close look at the correlation between this two pairs of variables
+
+```{r roof-area-and-overall-heigt}
+
+cor.test(df$Overall_Height, df$Roof_Area)
+
+```
+
+At 95% confidence the correlation is between -0.9761011 and -0.9683931. 
+This two variables are strongly correlated
+
+
+```{r compactiness-area}
+
+cor.test(df$Relative_Compactness, df$Surface_Area)
+
+```
+
+relative compactiness and surface area strongly correlated with 95% confidence of between -0.9929678 and -.09906741
+
+
+
+
+
+
+## Data distribution
+
+```{r boxplots}
+g <- ggplot(df, aes(x=factor(0),Cooling_Load)) + geom_boxplot(color = 'blue') + theme_classic()
+h <- ggplot(df, aes(x=factor(0),Heating_Load)) + geom_boxplot(color = 'blue') + theme_classic()
+i <- ggplot(df, aes(x=factor(0),Relative_Compactness)) + geom_boxplot(color = 'blue') + theme_classic()
+j <- ggplot(df, aes(x=factor(0),Surface_Area)) + geom_boxplot(color = 'blue') + theme_classic()
+k <- ggplot(df, aes(x=factor(0),Wall_Area)) + geom_boxplot(color = 'blue') + theme_classic()
+l <- ggplot(df, aes(x=factor(0),Roof_Area)) + geom_boxplot(color = 'blue') + theme_classic()
+m <- ggplot(df, aes(x=factor(0),Overall_Height)) + geom_boxplot(color = 'blue') + theme_classic()
+n <- ggplot(df, aes(x=factor(0),Glazing_Area)) + geom_boxplot(color = 'blue') + theme_classic()
+o <- ggplot(df, aes(x=factor(0),Glazing_Area_Distribution)) + geom_boxplot(color = 'blue') + theme_classic()
+p <- ggplot(df, aes(x=factor(0),Orientation)) + geom_boxplot(color = 'blue') + theme_classic()
+
+plot_grid(g,h,i,j,k,l,m,n,o,p,nrow = 2, ncol = 5)
+
+
+```
+
+
+
+Check if there is relationship between the two target variables
+
+```{r scatter}
+
+ggplot(df, aes(x=Heating_Load, y=Cooling_Load)) + geom_point(color='blue') + theme_classic()
+
+```
+
+
+
+
+There is a linear relationship between the two target variables.
+
+
+
+
+```{r histogram}
+
+
+g <- ggplot(data=melt(df), aes(x=value)) + geom_histogram(bins = 20,color='blue', fill ='white') + facet_wrap(~variable, scales = 'free_x') + theme_classic()
+
+g <- g + ggtitle('Histograms distribution')
+g
+``` 
+
+
+
+
+
+
+## Baseline Model using random forest
+
+```{r load-rf}
+library(randomForest)
+
+#split datasets input features and target
+
+M1 <- df[,-10]  #heating
+m2 <- df[,-9] #cooling
+
+
+```
+
+Build the model
+
+### Heating Load
+
+```{r build-model}
+#heating load
+
+rf_heating <- randomForest(Heating_Load ~ ., data = M1, mtry=3, importance = TRUE, na.action = na.omit)
+
+rf_heating
+
+```
+
+
+Feature importatnce
+```{r}
+rf_heating$importance
+```
+
+The orientation and grazing area distribution has the lowest contribution to the prediction of heating load
+
+
+### cooling
+
+```{r}
+
+rf_cooling <- randomForest(Cooling_Load ~ ., data = m2, mtry=3, importance = TRUE, na.action = na.omit)
+rf_cooling
+```
+
+```{r}
+rf_cooling$importance
+```
+
+Orientation and grazing area distribution has the lowest contribution
+
+
+## Build a baseline model using Linear Regression
+
+### heating
+
+```{r}
+lm_heating <- lm(Heating_Load ~.,data = M1)
+
+summary(lm_heating)
+
+```
+
+```{r}
+anova(lm_heating)
+```
+
+
+### Cooling
+
+```{r}
+
+lm_cooling <- lm(Cooling_Load ~ ., data = m2)
+summary(lm_cooling)
+
+```
+
+```{r}
+anova(lm_cooling)
+```
+
