@@ -254,3 +254,92 @@ summary(lm_cooling)
 anova(lm_cooling)
 ```
 
+
+
+
+## Train a baseline model without Orientation and Grazing_Area_Distribution
+
+```{r}
+
+
+Mh <- df[,-c(6,8,10)]  # heating without orientation and grazing area distribution
+Mc <- df[,-c(6,8,9)] # cooling
+
+```
+
+
+## Linear Model
+
+### heating
+
+```{r}
+lm_heating2 <- lm(Heating_Load ~., data = Mh)
+
+summary(lm_heating2)
+
+```
+
+```{r}
+anova(lm_heating2)
+```
+
+### cooling
+
+```{r}
+lm_cooling2 <- lm(Cooling_Load ~.,data = Mc)
+summary(lm_cooling2)
+```
+
+```{r}
+anova(lm_cooling2)
+```
+
+
+Feature importatnce
+
+```{r}
+rf_heating$importance
+```
+
+
+1.  Relative_Compactness
+1. Surface_Area
+1. Roof_Area 
+
+
+### Linear model with three features
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

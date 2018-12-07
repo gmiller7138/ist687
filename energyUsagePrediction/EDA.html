@@ -364,19 +364,19 @@ rf_heating</code></pre>
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 3
 ## 
-##           Mean of squared residuals: 0.4584535
-##                     % Var explained: 99.55</code></pre>
+##           Mean of squared residuals: 0.4749939
+##                     % Var explained: 99.53</code></pre>
 <p>Feature importatnce</p>
 <pre class="r"><code>rf_heating$importance</code></pre>
 <pre><code>##                              %IncMSE IncNodePurity
-## Relative_Compactness      69.1246479   22491.89160
-## Surface_Area              46.0443114   13930.55945
-## Wall_Area                 12.3570291    3529.27755
-## Roof_Area                 49.6379733   14399.79518
-## Overall_Height            57.1713137   16624.52877
-## Orientation               -0.1594797      55.03827
-## Glazing_Area              11.1806481    4381.50539
-## Glazing_Area_Distribution  3.6736114    1854.23467</code></pre>
+## Relative_Compactness      74.1687318   24030.54259
+## Surface_Area              47.3488759   14752.46803
+## Wall_Area                 12.0806084    3552.95108
+## Roof_Area                 41.5791630   12161.39530
+## Overall_Height            57.7850184   16480.94639
+## Orientation               -0.1617324      50.91983
+## Glazing_Area              11.0793843    4347.25031
+## Glazing_Area_Distribution  3.7585595    1867.37336</code></pre>
 <p>The orientation and grazing area distribution has the lowest contribution to the prediction of heating load</p>
 </div>
 <div id="cooling" class="section level3">
@@ -390,18 +390,18 @@ rf_cooling</code></pre>
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 3
 ## 
-##           Mean of squared residuals: 3.019612
-##                     % Var explained: 96.66</code></pre>
+##           Mean of squared residuals: 2.990043
+##                     % Var explained: 96.69</code></pre>
 <pre class="r"><code>rf_cooling$importance</code></pre>
-<pre><code>##                              %IncMSE IncNodePurity
-## Relative_Compactness      46.1742814    14898.7451
-## Surface_Area              54.9369792    17913.8035
-## Wall_Area                 13.1770751     3727.8581
-## Roof_Area                 54.9977460    16980.9245
-## Overall_Height            34.4159589    10599.0067
-## Orientation                0.1089438      250.2151
-## Glazing_Area               5.4400907     2415.1498
-## Glazing_Area_Distribution  1.0710477      823.5039</code></pre>
+<pre><code>##                               %IncMSE IncNodePurity
+## Relative_Compactness      44.43698570    14324.4465
+## Surface_Area              57.40061111    19076.5186
+## Wall_Area                 12.78681590     3516.6022
+## Roof_Area                 54.61959350    16882.5519
+## Overall_Height            34.82408524    10270.6651
+## Orientation                0.07705369      252.2353
+## Glazing_Area               5.51402988     2443.6685
+## Glazing_Area_Distribution  1.09496421      837.4781</code></pre>
 <p>Orientation and grazing area distribution has the lowest contribution</p>
 </div>
 </div>
@@ -495,6 +495,97 @@ summary(lm_cooling)</code></pre>
 ## Glazing_Area                1  2988.9  2988.9  291.6699 &lt;2e-16 ***
 ## Glazing_Area_Distribution   1     2.9     2.9    0.2847 0.5938    
 ## Residuals                 760  7788.2    10.2                     
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<div id="train-a-baseline-model-without-orientation-and-grazing_area_distribution" class="section level2">
+<h2>Train a baseline model without Orientation and Grazing_Area_Distribution</h2>
+<pre class="r"><code>Mh &lt;- df[,-c(6,8,10)]  # heating without orientation and grazing area distribution
+Mc &lt;- df[,-c(6,8,9)] # cooling</code></pre>
+</div>
+<div id="linear-model" class="section level2">
+<h2>Linear Model</h2>
+<div id="heating-1" class="section level3">
+<h3>heating</h3>
+<pre class="r"><code>lm_heating2 &lt;- lm(Heating_Load ~., data = Mh)
+
+summary(lm_heating2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Heating_Load ~ ., data = Mh)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -10.3862  -1.3667  -0.0142   1.3162   7.5555 
+## 
+## Coefficients: (1 not defined because of singularities)
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           84.386471  19.111765   4.415 1.15e-05 ***
+## Relative_Compactness -64.773432  10.333611  -6.268 6.11e-10 ***
+## Surface_Area          -0.087289   0.017149  -5.090 4.51e-07 ***
+## Wall_Area              0.060813   0.006676   9.109  &lt; 2e-16 ***
+## Roof_Area                    NA         NA      NA       NA    
+## Overall_Height         4.169954   0.339441  12.285  &lt; 2e-16 ***
+## Glazing_Area          20.437968   0.798727  25.588  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.947 on 762 degrees of freedom
+## Multiple R-squared:  0.9153, Adjusted R-squared:  0.9147 
+## F-statistic:  1646 on 5 and 762 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>anova(lm_heating2)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Response: Heating_Load
+##                       Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Relative_Compactness   1 30238.2 30238.2 3481.94 &lt; 2.2e-16 ***
+## Surface_Area           1  8092.8  8092.8  931.89 &lt; 2.2e-16 ***
+## Wall_Area              1 26144.8 26144.8 3010.59 &lt; 2.2e-16 ***
+## Overall_Height         1  1310.6  1310.6  150.92 &lt; 2.2e-16 ***
+## Glazing_Area           1  5686.1  5686.1  654.75 &lt; 2.2e-16 ***
+## Residuals            762  6617.4     8.7                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div id="cooling-2" class="section level3">
+<h3>cooling</h3>
+<pre class="r"><code>lm_cooling2 &lt;- lm(Cooling_Load ~.,data = Mc)
+summary(lm_cooling2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Cooling_Load ~ ., data = Mc)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.7240 -1.6017 -0.2631  1.3417 11.3251 
+## 
+## Coefficients: (1 not defined because of singularities)
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           97.761848  20.756339   4.710 2.94e-06 ***
+## Relative_Compactness -70.787707  11.222822  -6.307 4.80e-10 ***
+## Surface_Area          -0.088245   0.018624  -4.738 2.57e-06 ***
+## Wall_Area              0.044682   0.007251   6.162 1.16e-09 ***
+## Roof_Area                    NA         NA      NA       NA    
+## Overall_Height         4.283843   0.368650  11.620  &lt; 2e-16 ***
+## Glazing_Area          14.817971   0.867458  17.082  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.2 on 762 degrees of freedom
+## Multiple R-squared:  0.8876, Adjusted R-squared:  0.8868 
+## F-statistic:  1203 on 5 and 762 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>anova(lm_cooling2)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Response: Cooling_Load
+##                       Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Relative_Compactness   1 27931.9 27931.9 2726.88 &lt; 2.2e-16 ***
+## Surface_Area           1  8254.2  8254.2  805.82 &lt; 2.2e-16 ***
+## Wall_Area              1 21052.3 21052.3 2055.25 &lt; 2.2e-16 ***
+## Overall_Height         1  1383.2  1383.2  135.03 &lt; 2.2e-16 ***
+## Glazing_Area           1  2988.9  2988.9  291.80 &lt; 2.2e-16 ***
+## Residuals            762  7805.3    10.2                      
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
