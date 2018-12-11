@@ -1,0 +1,193 @@
+---
+title: "Energy Efficiency"
+output: 
+    flexdashboard::flex_dashboard:
+        orientation: columns
+        vertical_layout: fill
+        self_contained: true
+        social : ["twitter","facebook","menu"]
+        source_code : embed
+runtime: shiny
+---
+
+
+```{r load-packages, cache=TRUE}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(psych)
+library(reshape2)
+library(clusterSim) #normalization
+library(cowplot)
+
+
+```
+
+
+```{r load-data, cache=TRUE}
+df <- read_excel('./ENB2012_data.xlsx')
+#create a vector of the columns
+df_column <- c('Relative_Compactness','Surface_Area', 'Wall_Area','Roof_Area','Overall_Height','Orientation','Glazing_Area','Glazing_Area_Distribution','Heating_Load','Cooling_Load')
+
+colnames(df) <- df_column
+
+```
+
+# Energy Prediction
+## controls {.sidebar}
+
+```{r file-input}
+
+fileInput(
+  inputId = 'fileupload',
+  label = 'Please upload an excel file',
+  multiple = FALSE,
+  buttonLabel = 'Upload',
+  placeholder = 'waiting for file'
+)
+
+
+```
+
+
+```{r data-upload}
+theData <- reactive({
+   if(is.null(input$fileupload)) {
+     return(NULL)
+   }
+  read_excel(input$fileupload$datapath)
+})
+
+```
+
+
+
+## Model Prediction
+###
+```{r}
+
+DT::renderDataTable(DT::datatable(theData()))
+
+```
+
+
+
+
+# Description
+## page1-col1
+
+### Table
+```{r display-table}
+#DT::renderDataTable(DT::datatable(df))
+DT::datatable(df)
+```
+
+### Corelation Plot
+```{r pair-plots}
+
+renderPlot(pairs.panels(df[,-c(9,10)]))
+
+```
+
+
+
+
+##page1-col2
+### Selector {data-height=250}
+```{r hist-var}
+selectInput(
+  inputId = 'HistVar',
+  label = 'Please Select a column',
+  choices = names(df)
+)
+
+```
+
+The histogram for the selected column is shown below
+
+### Data Distribution
+```{r histogtam}
+renderPlot(ggplot(df, aes_string(x=input$HistVar)) + geom_histogram() + theme_classic())
+```
+
+
+# Random Forest
+##page2-col1
+### Model Summary : Heating
+```{r model}
+library(randomForest)
+
+#split datasets input features and target
+
+M1 <- df[,-10]  #heating
+m2 <- df[,-9] #cooling
+```
+
+```{r train-model}
+rf_heating <- randomForest(Heating_Load ~ ., data = M1, mtry=3, importance = TRUE, na.action = na.omit)
+
+renderPrint(rf_heating)
+```
+
+
+
+### Model Summary : Cooling
+```{r cooling-model}
+rf_cooling <- randomForest(Cooling_Load ~ ., data = m2, mtry=3, importance = TRUE, na.action = na.omit)
+
+renderPrint(rf_cooling)
+
+```
+
+
+##page2-col2
+### Feature Importance : Heating
+```{r heating-features}
+renderPrint(rf_heating$importance)
+
+```
+
+
+### Feature Importance : Cooling
+
+```{r cooling-features}
+renderPrint(rf_cooling$importance)
+
+```
+
+
+# Linear Model
+## Heating
+### Summary Linear Model : Heating
+```{r lm-heating}
+lm_heating <- lm(Heating_Load ~.,data = M1)
+
+renderPrint(summary(lm_heating))
+
+```
+
+### ANOVA : Heating
+```{r anova-heating}
+renderPrint(anova(lm_heating))
+
+```
+
+
+## Cooling
+### Summary Linear Model : Cooling
+```{r}
+lm_cooling <- lm(Cooling_Load ~ ., data = m2)
+renderPrint(summary(lm_cooling))
+
+```
+
+
+### ANOVA : Cooling
+```{r anova-cooling}
+renderPrint(anova(lm_cooling))
+```
+
+
+
+
+

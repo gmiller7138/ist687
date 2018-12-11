@@ -1,0 +1,17 @@
+base
+RevoUtils
+shiny
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+readxl
+psych
+reshape2
+cluster
+MASS
+clusterSim
+cowplot
