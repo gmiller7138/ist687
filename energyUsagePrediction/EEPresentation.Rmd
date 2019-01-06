@@ -51,19 +51,38 @@ fileInput(
 
 
 ```{r data-upload}
+#create a vector of the columns
+df_column <- c('Relative_Compactness','Surface_Area', 'Wall_Area','Roof_Area','Overall_Height','Orientation','Glazing_Area','Glazing_Area_Distribution','Heating_Load','Cooling_Load')
+
 theData <- reactive({
    if(is.null(input$fileupload)) {
      return(NULL)
    }
   read_excel(input$fileupload$datapath)
+
 })
 
 ```
 
 
 
-## Model Prediction
-###
+```{r column-selected}
+
+
+df_select <- reactive(checkboxGroupInput(
+  inputId = 'colselect',
+  label = 'Select Required Columns',
+  choices = names(theData())
+))
+
+renderUI(df_select())
+```
+
+
+
+## Data View {.tabset}
+
+### Data View
 ```{r}
 
 DT::renderDataTable(DT::datatable(theData()))
@@ -74,7 +93,7 @@ DT::renderDataTable(DT::datatable(theData()))
 
 
 # Description
-## page1-col1
+## page1-col1 {.tabset}
 
 ### Table
 ```{r display-table}
@@ -82,7 +101,7 @@ DT::renderDataTable(DT::datatable(theData()))
 DT::datatable(df)
 ```
 
-### Corelation Plot
+###Corelation Plot
 ```{r pair-plots}
 
 renderPlot(pairs.panels(df[,-c(9,10)]))
@@ -91,9 +110,8 @@ renderPlot(pairs.panels(df[,-c(9,10)]))
 
 
 
+### Histogram
 
-##page1-col2
-### Selector {data-height=250}
 ```{r hist-var}
 selectInput(
   inputId = 'HistVar',
@@ -105,7 +123,7 @@ selectInput(
 
 The histogram for the selected column is shown below
 
-### Data Distribution
+
 ```{r histogtam}
 renderPlot(ggplot(df, aes_string(x=input$HistVar)) + geom_histogram() + theme_classic())
 ```
@@ -157,7 +175,7 @@ renderPrint(rf_cooling$importance)
 
 
 # Linear Model
-## Heating
+## Heating {.tabset}
 ### Summary Linear Model : Heating
 ```{r lm-heating}
 lm_heating <- lm(Heating_Load ~.,data = M1)
@@ -173,7 +191,6 @@ renderPrint(anova(lm_heating))
 ```
 
 
-## Cooling
 ### Summary Linear Model : Cooling
 ```{r}
 lm_cooling <- lm(Cooling_Load ~ ., data = m2)

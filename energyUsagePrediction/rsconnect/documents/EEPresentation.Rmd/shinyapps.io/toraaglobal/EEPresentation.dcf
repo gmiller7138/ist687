@@ -1,0 +1,12 @@
+name: EEPresentation
+title: EEPresentation
+username:
+account: toraaglobal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 614056
+bundleId: 1755982
+url: https://toraaglobal.shinyapps.io/EEPresentation/
+when: 1544549215.29693
+asMultiple: FALSE
+asStatic: FALSE
